@@ -8,8 +8,14 @@ import { EnvelopeOpenIcon } from "@radix-ui/react-icons";
 
 export default function Splash() {
   return (
+
     <div className="flex">
-      <div className="w-64 bg-slate-300 ">
+      {/* Left side with fixed width */}
+      <div className="w-64 h-dvh bg-gray-200 p-4">
+        Left Side Content
+
+
+        <div className="w-64 bg-slate-300 ">
         <div className="pt-3  flex items-center">
           <div className="grid col-span-1">
             <Image src="/profile.png" alt="logo" width={50} height={50} />
@@ -46,28 +52,35 @@ export default function Splash() {
         <div>
           <div>
             <div className="">
-              <div>
-                <Image
-                  src="/profile.png"
+            <div className="pt-3  flex items-center">
+          <div className="grid col-span-1">
+            <Image src="/profile.png"
                   alt="profile"
                   width="60"
-                  height="60"
-                />
-              </div>
-              <div>
-                <div>
-                  <p>Joe</p>
-                </div>
-                <div>
-                  <p>Last sent message</p>
-                </div>
-              </div>
+                  height="60" />
+          </div>
+          <div className="grid col-span-5">
+            <p>Joe</p>
+            <p>Last sent message</p>
+          </div>
+        </div>
+              
+              
+              
             </div>
           </div>
         </div>
       </div>
-      {/* /* chat area */}
-      <div>
+
+
+
+
+        
+      </div>
+      {/* Right side taking up remaining space */}
+      <div className="flex-1 bg-gray-100 p-4">
+        Right Side Content
+        
         <div className="empty">
           <Image
             src="/empty-for-chats.png"
@@ -75,7 +88,8 @@ export default function Splash() {
             height="400"
             alt="empty-for-chats"
           />
-        </div>
+
+
         <div className="receipient">
           <div>
             <h1>receipient</h1>
@@ -91,6 +105,7 @@ export default function Splash() {
             </div>
           </div>
         </div>
+
 
         <div className="sender">
           <div>
@@ -113,7 +128,21 @@ export default function Splash() {
             </div>
           </div>
         </div>
+
       </div>
     </div>
+
+
+    // <div className="flex">
+      
+    //   {/* /* chat area */}
+    //   <div className="empty flex justify-center items-center">
+        
+    //     </div>
+        
+
+    
+    //   </div>
+    // </div>
   );
 }
