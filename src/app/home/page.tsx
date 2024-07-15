@@ -21,22 +21,54 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/components/ui/use-toast";
 import { Centrifuge } from "centrifuge";
 import { useEffect, useState } from "react";
+import * as jose from 'jose';
 
 export default function Splash() {
-  function conn() {
+  
+  // imp jose = require('jose');
+
+  /*const toks =()=> {
+    const secret = new TextEncoder().encode('DA8FD7E9A9F5DC952F03C6EBDC37BD91F39B28635722AC978438287CB929DB34D90B34A7F1421612181CC652932771A7F037A829C0B596BF7B8CE5528278783C')
+    const alg = 'HS256'
+    const currentTime = Date.now();
+    const token = await new jose.SignJWT({ sub: '818a8e5f-4fc9-48e9-aa7c-f3175bb70b5a' })
+      .setProtectedHeader({ alg })
+      .setIssuer("fcm")
+      .setAudience("Centrifugo")
+      .setIssuedAt(currentTime)
+      .setExpirationTime('5d')
+      .sign(secret)
+  
+    console.log("THE TOKEN",token);
+  }\*/
+
+
+
+  async function  conn(  ) {
+
+    const secret = new TextEncoder().encode('DA8FD7E9A9F5DC952F03C6EBDC37BD91F39B28635722AC978438287CB929DB34D90B34A7F1421612181CC652932771A7F037A829C0B596BF7B8CE5528278783C')
+    const alg = 'HS256'
+    const currentTime = Date.now();
+    const token = await new jose.SignJWT({ sub: '42', channel: '$notification' })
+      .setProtectedHeader({ alg })
+      .setIssuer("fcm")
+      .setAudience("Centrifugo")
+      .setIssuedAt(currentTime)
+      .setExpirationTime('5d')
+      .setSubject('818a8e5f-4fc9-48e9-aa7c-f3175bb70b5a')
+      .sign(secret)
+  
+    console.log("THE TOKEN",token);
+
     const centrifuge = new Centrifuge(
-      "wss://smpp.stlghana.com/connection/websocket",
-      {
-        token:
-          "65bcc0d4-3d68-455c-b6c1-168c8f20eb27",
-      }
+      "wss://smpp.stlghana.com/connection/websocket"      
     );
     // Add HS256 Access Token for Authentication
-
+    centrifuge.setToken(token);
     centrifuge
-      .on("connecting", function (ctx) {
-        console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
-      })
+     .on("connecting", function (ctx) {
+       console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
+     })
       .on("connected", function (ctx) {
         console.log(`connected over ${ctx.transport}`);
       })
@@ -142,8 +174,8 @@ export default function Splash() {
               <Image src="/profile.png" alt="logo" width={50} height={50} />
             </div>
             <div className="grid col-span-5">
-              <p>Awer Joseph Kweku</p>
-              <p>Tablet User</p>
+              <div>Awer Joseph Kweku</div>
+              <div>Tablet User</div>
             </div>
           </div>
           <div className="px-2 pb-4">
@@ -163,14 +195,14 @@ export default function Splash() {
                 />
               </div>
               <div>
-                <p>you have no friends?</p>
-                <p>Click below to add friends</p>
+                <div>you have no friends?</div>
+                <div>Click below to add friends</div>
                 <Button>ADD PUSH BUDDY</Button>
               </div>
             </div> */}
           </div>
           <div className=" border-1 border-border">
-            <p> Messages</p>
+            <div> Messages</div>
           </div>
 
           <div>
@@ -186,8 +218,8 @@ export default function Splash() {
                     />
                   </div>
                   <div className="grid col-span-5">
-                    <p>Joe</p>
-                    <p>Last sent message</p>
+                    <div>Joe</div>
+                    <div>Last sent message</div>
                   </div>
                 </div>
               </div>
@@ -225,7 +257,7 @@ export default function Splash() {
                     : "bg-gray-300 text-black"
                 }`}
               >
-                <p>{message.message}</p>
+                <div>{message.message}</div>
               </div>
               {message.messageType === "sender" && (
                 <div className="flex-shrink-0 ml-2">
