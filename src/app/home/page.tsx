@@ -22,66 +22,102 @@ import { toast } from "@/components/ui/use-toast";
 import { Centrifuge } from "centrifuge";
 import { useEffect, useState } from "react";
 
-
 export default function Splash() {
-  
-    const [messages, setMessages] = useState<Message[]>([]);
-  
-    useEffect(() => {
-      const initialMessages: Message[] = [
-        {
-          id: 1,
-          message: 'Message 1 from sender Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-          messageType: 'sender',
-          profilePicture: '/profile.png',
-          timestamp: Date.now() // Current timestamp in milliseconds
-        },
-        {
-          id: 2,
-          message: 'Message 2 from sender Suspendisse felis vitae nunc imp',
-          messageType: 'sender',
-          profilePicture: '/profile.png',
-          timestamp: Date.now() - 10000 // Example timestamp, 10 seconds earlier
-        },
-        {
-          id: 3,
-          message: 'Message 3 from sender Fusce quis ligula eu libero rutrum',
-          messageType: 'sender',
-          profilePicture: '/profile.png',
-          timestamp: Date.now() - 20000 // Example timestamp, 20 seconds earlier
-        },
-        {
-          id: 4,
-          message: 'Message 1 from receiver Ut convallis est a dui venenatis',
-          messageType: 'receiver',
-          profilePicture: '/profile.png',
-          timestamp: Date.now() + 10000 // Example timestamp, 10 seconds later
-        },
-        {
-          id: 5,
-          message: 'Message 2 from receiver Nullam sit amet magna in elit mollis',
-          messageType: 'sender',
-          profilePicture: '/profile.png',
-          timestamp: Date.now() + 20000 // Example timestamp, 20 seconds later
-        },
-        {
-          id: 6,
-          message: 'Message 3 from receiver Pellentesque habitant morbi tristique senectus',
-          messageType: 'receiver',
-          profilePicture: '/profile.png',
-          timestamp: Date.now() + 30000 // Example timestamp, 30 seconds later
-        }
-      ];
+  function conn() {
+    const centrifuge = new Centrifuge(
+      "wss://smpp.stlghana.com/connection/websocket",
+      {
+        token:
+          "65bcc0d4-3d68-455c-b6c1-168c8f20eb27",
+      }
+    );
+    // Add HS256 Access Token for Authentication
+
+    centrifuge
+      .on("connecting", function (ctx) {
+        console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
+      })
+      .on("connected", function (ctx) {
+        console.log(`connected over ${ctx.transport}`);
+      })
+      .on("disconnected", function (ctx) {
+        console.log(`disconnected: ${ctx.code}, ${ctx.reason}`);
+      })
+      .connect();
+
+    const sub = centrifuge.newSubscription("pingStats");
+
+    sub
+      .on("subscribing", function (ctx) {
+        console.log(`subscribing: ${ctx.code}, ${ctx.reason}`);
+      })
+      .on("subscribed", function (ctx) {
+        console.log("subscribed", ctx);
+      })
+      .on("unsubscribed", function (ctx) {
+        console.log(`unsubscribed: ${ctx.code}, ${ctx.reason}`);
+      })
+      .on("error", function (ctx) {
+        console.log("subscription error", ctx);
+      })
+      .subscribe();
+  }
+
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    const initialMessages: Message[] = [
+      {
+        id: 1,
+        message:
+          "Message 1 from sender Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        messageType: "sender",
+        profilePicture: "/profile.png",
+        timestamp: Date.now() - 200, // Current timestamp in milliseconds
+      },
+      {
+        id: 2,
+        message: "Message 2 from sender Suspendisse felis vitae nunc imp",
+        messageType: "sender",
+        profilePicture: "/profile.png",
+        timestamp: Date.now() - 10000, // Example timestamp, 10 seconds earlier
+      },
+      {
+        id: 3,
+        message: "Message 3 from sender Fusce quis ligula eu libero rutrum",
+        messageType: "sender",
+        profilePicture: "/profile.png",
+        timestamp: Date.now() - 20000, // Example timestamp, 20 seconds earlier
+      },
+      {
+        id: 4,
+        message: "Message 1 from receiver Ut convallis est a dui venenatis",
+        messageType: "receiver",
+        profilePicture: "/profile.png",
+        timestamp: Date.now() + 10000, // Example timestamp, 10 seconds later
+      },
+      {
+        id: 5,
+        message: "Message 2 from receiver Nullam sit amet magna in elit mollis",
+        messageType: "sender",
+        profilePicture: "/profile.png",
+        timestamp: Date.now() + 20000, // Example timestamp, 20 seconds later
+      },
+      {
+        id: 6,
+        message:
+          "Message 3 from receiver Pellentesque habitant morbi tristique senectus",
+        messageType: "receiver",
+        profilePicture: "/profile.png",
+        timestamp: Date.now() + 30000, // Example timestamp, 30 seconds later
+      },
+    ];
 
     // Sort messages by timestamp (ascending)
     initialMessages.sort((a, b) => a.timestamp - b.timestamp);
 
     setMessages(initialMessages);
   }, []);
-
-
-
-
 
   const log = () => {
     let messageBox = document.getElementById(
@@ -97,12 +133,12 @@ export default function Splash() {
   };
 
   return (
-    <div className="flex suppressHydrationWarning">
+    <div className="flex " suppressHydrationWarning={true}>
       {/* chats sidebar with fixed width */}
-      <div className="w-64 h-full relative bg-gray-200 ">
+      <div className="w-64 h-full  bg-gray-200 ">
         <div className="w-64 fixed ">
           <div className="pt-3  flex items-center">
-            <div className="grid col-span-1">
+            <div className="py-3 grid col-span-1">
               <Image src="/profile.png" alt="logo" width={50} height={50} />
             </div>
             <div className="grid col-span-5">
@@ -134,7 +170,7 @@ export default function Splash() {
             </div> */}
           </div>
           <div className=" border-1 border-border">
-            <p>Messages</p>
+            <p> Messages</p>
           </div>
 
           <div>
@@ -160,77 +196,62 @@ export default function Splash() {
         </div>
       </div>
       {/* Right side taking up remaining space */}
-      <div className="flex-1 content-end bg-gray-100">
-        <div className="empty">
-          <div className="messageSection">
-            {/* <Image
-            src="/empty-for-chats.png"
-            width="500"
-            height="400"
-            alt="empty-for-chats"
-          /> */}
-
-            
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={
-                    message.messageType === "sender" ? "sender" : "receipient"
-                  }
-                >
-                  <div className="pt-3 gap-1 place-items-end">
-                    <div
-                      className={`flex items-center justify-${
-                        message.messageType === "sender" ? "end" : "start"
-                      }`}
-                    >
-                      {message.messageType === "sender" ? (
-                        <>
-                          
-                          <div className="rounded-lg py-2 px-4 bg-[#D9D9D9] max-w-[50%]">
-                            <p>{message.message}</p>
-                          </div>
-                          <div className="ml-2 self-start">
-                            <img
-                              src={message.profilePicture}
-                              alt="profile"
-                              width={40}
-                              height={40}
-                              className="rounded-full"
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <><div className="ml-2 self-start">
-                            <img
-                              src={message.profilePicture}
-                              alt="profile"
-                              width={40}
-                              height={40}
-                              className="rounded-full"
-                            />
-                          </div>
-                          <div className="rounded-lg py-2 px-4 bg-[#346EA2] max-w-[50%]">
-                            <p>{message.message}</p>
-                          </div>
-                          
-                        </>
-                      )}
-                    </div>
-                  </div>
+      <div className="flex-1 h-dvh bg-gray-100 flex   flex-col">
+        <div className="flex-1 overflow-y-auto content-end p-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex mb-4 ${
+                message.messageType === "sender"
+                  ? "justify-end"
+                  : "justify-start"
+              }`}
+            >
+              {message.messageType === "receiver" && (
+                <div className="flex-shrink-0 mr-2">
+                  <Image
+                    src={message.profilePicture}
+                    alt="profile"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
                 </div>
-              ))}
-            
-          </div>
-
-          <div className="border-input sticky bottom-0 bg-white border-t-1 p-2  flex gap-1">
-            <Textarea id="messageBox" style={{resize:'none' }} placeholder="Type your message here." />
-            <Button onClick={log}>
-              {" "}
-              <PaperPlaneIcon className="mr-2 h-4 w-4" />
-              Send
-            </Button>
-          </div>
+              )}
+              <div
+                className={`max-w-[50%] p-4 rounded-lg ${
+                  message.messageType === "sender"
+                    ? "bg-primary text-white"
+                    : "bg-gray-300 text-black"
+                }`}
+              >
+                <p>{message.message}</p>
+              </div>
+              {message.messageType === "sender" && (
+                <div className="flex-shrink-0 ml-2">
+                  <Image
+                    src={message.profilePicture}
+                    alt="profile"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="bg-white border-t p-4 flex items-center">
+          <Textarea
+            id="messageBox"
+            style={{ resize: "none" }}
+            placeholder="Type your message here."
+            className="flex-1 mr-2"
+          />
+          <Button onClick={conn}>
+            <PaperPlaneIcon className="mr-2 h-4 w-4" />
+            Send
+          </Button>
         </div>
       </div>
     </div>
