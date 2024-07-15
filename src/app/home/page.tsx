@@ -19,39 +19,88 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@/components/ui/use-toast";
-import {Centrifuge} from "centrifuge";
+import { Centrifuge } from "centrifuge";
+import { useEffect, useState } from "react";
+
 
 export default function Splash() {
-// Use WebSocket transport endpoint.
-const centrifuge = new Centrifuge('wss://smpp.stlghana.com/connection/websocket');
-centrifuge.setToken("DA8FD7E9A9F5DC952F03C6EBDC37BD91F39B28635722AC978438287CB929DB34D90B34A7F1421612181CC652932771A7F037A829C0B596BF7B8CE5528278783C")
-// Allocate Subscription to a channel.
-const sub = centrifuge.newSubscription('news');
-
-
-
-centrifuge.on("connect",  function (connection :any) {
-  console.log("connected")
-})
-
-centrifuge.on("disconnect",  function (connection : any) {
-  console.log("disconnected", connection)
-})
-
-centrifuge.subscribe("downClientsMonitor", function (connection : any){
-  console.log(connection.data);
-})
-
-
-
-
-  const log =()=>console.log("x"); 
   
+    const [messages, setMessages] = useState<Message[]>([]);
+  
+    useEffect(() => {
+      const initialMessages: Message[] = [
+        {
+          id: 1,
+          message: 'Message 1 from sender Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+          messageType: 'sender',
+          profilePicture: '/profile.png',
+          timestamp: Date.now() // Current timestamp in milliseconds
+        },
+        {
+          id: 2,
+          message: 'Message 2 from sender Suspendisse felis vitae nunc imp',
+          messageType: 'sender',
+          profilePicture: '/profile.png',
+          timestamp: Date.now() - 10000 // Example timestamp, 10 seconds earlier
+        },
+        {
+          id: 3,
+          message: 'Message 3 from sender Fusce quis ligula eu libero rutrum',
+          messageType: 'sender',
+          profilePicture: '/profile.png',
+          timestamp: Date.now() - 20000 // Example timestamp, 20 seconds earlier
+        },
+        {
+          id: 4,
+          message: 'Message 1 from receiver Ut convallis est a dui venenatis',
+          messageType: 'receiver',
+          profilePicture: '/profile.png',
+          timestamp: Date.now() + 10000 // Example timestamp, 10 seconds later
+        },
+        {
+          id: 5,
+          message: 'Message 2 from receiver Nullam sit amet magna in elit mollis',
+          messageType: 'sender',
+          profilePicture: '/profile.png',
+          timestamp: Date.now() + 20000 // Example timestamp, 20 seconds later
+        },
+        {
+          id: 6,
+          message: 'Message 3 from receiver Pellentesque habitant morbi tristique senectus',
+          messageType: 'receiver',
+          profilePicture: '/profile.png',
+          timestamp: Date.now() + 30000 // Example timestamp, 30 seconds later
+        }
+      ];
+
+    // Sort messages by timestamp (ascending)
+    initialMessages.sort((a, b) => a.timestamp - b.timestamp);
+
+    setMessages(initialMessages);
+  }, []);
+
+
+
+
+
+  const log = () => {
+    let messageBox = document.getElementById(
+      "messageBox"
+    ) as HTMLTextAreaElement;
+    var message = messageBox.value;
+    if (message.trim() != "") {
+      console.log("Send message is:", message.trim());
+      messageBox.value = " ";
+    } else {
+      console.log("message is empty");
+    }
+  };
+
   return (
-    <div className="flex">
-      {/* Left side with fixed width */}
-      <div className="w-64 h-dvh bg-gray-200 ">
-        <div className="w-64 ">
+    <div className="flex suppressHydrationWarning">
+      {/* chats sidebar with fixed width */}
+      <div className="w-64 h-full relative bg-gray-200 ">
+        <div className="w-64 fixed ">
           <div className="pt-3  flex items-center">
             <div className="grid col-span-1">
               <Image src="/profile.png" alt="logo" width={50} height={50} />
@@ -61,7 +110,7 @@ centrifuge.subscribe("downClientsMonitor", function (connection : any){
               <p>Tablet User</p>
             </div>
           </div>
-          <div className="pb-4">
+          <div className="px-2 pb-4">
             <Input
               id="search"
               type="text"
@@ -113,64 +162,69 @@ centrifuge.subscribe("downClientsMonitor", function (connection : any){
       {/* Right side taking up remaining space */}
       <div className="flex-1 content-end bg-gray-100">
         <div className="empty">
-          {/* <Image
+          <div className="messageSection">
+            {/* <Image
             src="/empty-for-chats.png"
             width="500"
             height="400"
             alt="empty-for-chats"
           /> */}
 
-          <div className="receipient">
-            <div className="pt-3 gap-1 place-items-end">
-              <div className="flex items-center justify-start">
-                <div className="ml-2">
-                  <Image
-                    src="/profile.png"
-                    alt="profile"
-                    width="60"
-                    height="60"
-                  />
+            
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={
+                    message.messageType === "sender" ? "sender" : "receipient"
+                  }
+                >
+                  <div className="pt-3 gap-1 place-items-end">
+                    <div
+                      className={`flex items-center justify-${
+                        message.messageType === "sender" ? "end" : "start"
+                      }`}
+                    >
+                      {message.messageType === "sender" ? (
+                        <>
+                          
+                          <div className="rounded-lg py-2 px-4 bg-[#D9D9D9] max-w-[50%]">
+                            <p>{message.message}</p>
+                          </div>
+                          <div className="ml-2 self-start">
+                            <img
+                              src={message.profilePicture}
+                              alt="profile"
+                              width={40}
+                              height={40}
+                              className="rounded-full"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <><div className="ml-2 self-start">
+                            <img
+                              src={message.profilePicture}
+                              alt="profile"
+                              width={40}
+                              height={40}
+                              className="rounded-full"
+                            />
+                          </div>
+                          <div className="rounded-lg py-2 px-4 bg-[#346EA2] max-w-[50%]">
+                            <p>{message.message}</p>
+                          </div>
+                          
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className=" rounded-full py-2 px-4 bg-[#346EA2] max-w-[50%]">
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur sadipiscing elit.
-                    Suspendisse felis vitae nunc imp
-                  </p>
-                </div>
-              </div>
-            </div>
+              ))}
+            
           </div>
 
-          <div className="pt-2 pb-4 sender">
-            <div className="pt-3 gap-1 place-items-end">
-              <div className="flex items-center justify-end">
-                {" "}
-                {/* Added justify-end to align items to the right */}
-                <div className="rounded-full py-2 px-4 bg-[#D9D9D9] max-w-[50%]">
-                  {" "}
-                  {/* Adjusted width to max-w-[50%] */}
-                  <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                    Suspendisse felis vitae nunc imp
-                  </p>
-                </div>
-                <div className="ml-2">
-                  {" "}
-                  {/* Added ml-2 for margin-left */}
-                  <Image
-                    src="/profile.png"
-                    alt="profile"
-                    width={60}
-                    height={60}
-                    className="rounded-full"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-input bg-white border-t-1 p-2  flex gap-1">
-            <Textarea placeholder="Type your message here." />
+          <div className="border-input sticky bottom-0 bg-white border-t-1 p-2  flex gap-1">
+            <Textarea id="messageBox" style={{resize:'none' }} placeholder="Type your message here." />
             <Button onClick={log}>
               {" "}
               <PaperPlaneIcon className="mr-2 h-4 w-4" />
