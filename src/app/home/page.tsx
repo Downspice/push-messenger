@@ -22,25 +22,12 @@ import { toast } from "@/components/ui/use-toast";
 import { Centrifuge } from "centrifuge";
 import { useEffect, useState } from "react";
 import * as jose from 'jose';
+import axios from 'axios';
+
 
 export default function Splash() {
+  //Axios call to send the data to the back-end
   
-  // imp jose = require('jose');
-
-  /*const toks =()=> {
-    const secret = new TextEncoder().encode('DA8FD7E9A9F5DC952F03C6EBDC37BD91F39B28635722AC978438287CB929DB34D90B34A7F1421612181CC652932771A7F037A829C0B596BF7B8CE5528278783C')
-    const alg = 'HS256'
-    const currentTime = Date.now();
-    const token = await new jose.SignJWT({ sub: '818a8e5f-4fc9-48e9-aa7c-f3175bb70b5a' })
-      .setProtectedHeader({ alg })
-      .setIssuer("fcm")
-      .setAudience("Centrifugo")
-      .setIssuedAt(currentTime)
-      .setExpirationTime('5d')
-      .sign(secret)
-  
-    console.log("THE TOKEN",token);
-  }\*/
 
 
 
@@ -151,14 +138,36 @@ export default function Splash() {
     setMessages(initialMessages);
   }, []);
 
-  const log = () => {
+  
+
+  async function log  (){
+
+    var sending:payload={
+      id: "70311703-358f-45a1-a207-0a53f3422387",
+      message: "Prince Amofah's message",
+      senderId: "7f38f730-3fc2-4a03-a0e5-ff464a004bf9",
+      receiverId: "7f38f730-3fc2-4a03-a0e5-ff464a004bf9",
+      receiver: "Prince",
+      sender: "Bryan",
+      createdAt: "2024-07-16T12:59"
+      };
+
+
     let messageBox = document.getElementById(
       "messageBox"
     ) as HTMLTextAreaElement;
     var message = messageBox.value;
     if (message.trim() != "") {
       console.log("Send message is:", message.trim());
-      messageBox.value = " ";
+      try{
+        const response =await axios.post('http://192.168.250.209:7300/api/v1/messages/create-message',sending);
+        console.log("the payload is ::", response.data);
+      }catch(e){
+        console.log("Thsi error happened",e);
+      }
+      
+
+      message = " ";
     } else {
       console.log("message is empty");
     }
@@ -280,7 +289,7 @@ export default function Splash() {
             placeholder="Type your message here."
             className="flex-1 mr-2"
           />
-          <Button onClick={conn}>
+          <Button onClick={log}>
             <PaperPlaneIcon className="mr-2 h-4 w-4" />
             Send
           </Button>
