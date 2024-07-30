@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/Providers.tsx", "src/app/layout.tsx", "src/helpers/PrivateRoute.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/Providers.tsx", "src/app/layout.tsx", "src/helpers/PrivateRoute.js", "src/components/ui/header.jsx"],
   "exclude": ["node_modules"]
 }

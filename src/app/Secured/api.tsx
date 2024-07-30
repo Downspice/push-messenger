@@ -3,23 +3,26 @@ import { API_ENDPOINT_BASE } from "@/utils/constants";
 import { useSession } from "next-auth/react";
 
 export const getConnectionToken = async (bearerToken: string) => {
-  console.log("ive got balllsss:", bearerToken);
+  console.log("the Bearer Token:", bearerToken);
   try {
-    const response = await axios.get(`https://api.restful-api.dev/objects/7`, {
-      headers: {
-        Authorization: `Bearer ${bearerToken}`,
-      },
-    });
-    console.log(response.data.id);
-    return response.data.id;
-  } catch (error) {
-    console.error("Error fetching object:", error);
-    throw error; // Re-throw the error to handle it elsewhere if needed
+    var response = await axios.get(
+      `${API_ENDPOINT_BASE}/api/v1/messages/credentials`,
+      {
+        headers: {
+          Authorization: `Bearer ${bearerToken}`,
+        },
+      }
+    );
+    localStorage.setItem("CENTRIFUGO_ACCESS_TOKEN", response.data.token);
+    return response.data.token;
+  } catch (e) {
+    console.error("Error fetching object:", e);
+    throw e; // Re-throw the error to handle it elsewhere if needed
   }
 };
 
 export const getMessages = async (bearerToken: string) => {
-  console.log("ive got balllsss:", bearerToken);
+  console.log("the Bearer Token..........:", bearerToken);
   try {
     const response = await axios.get(
       `${API_ENDPOINT_BASE}/api/v1/messages/findAll`,
@@ -37,8 +40,28 @@ export const getMessages = async (bearerToken: string) => {
   }
 };
 
-export const sendMessage = async (bearerToken: string) => {
-  console.log("ive got balllsss:", bearerToken);
+export const sendMessage = async (bearerToken: string, message: any) => {
+  console.log("the Bearer Token..........:", bearerToken);
+  try {
+    const response = await axios.post(
+      `${API_ENDPOINT_BASE}/api/v1/messages/create-message`,
+      { message },
+      {
+        headers: {
+          Authorization: `Bearer ${bearerToken}`,
+        },
+      }
+    );
+    console.log("send this message", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching object:", error);
+    throw error; // Re-throw the error to handle it elsewhere if needed
+  }
+};
+
+export const publishChannel = async (bearerToken: string) => {
+  console.log("the Bearer Token..........:", bearerToken);
   try {
     const response = await axios.get(
       `${API_ENDPOINT_BASE}/api/v1/messages/create-message`,
@@ -55,22 +78,3 @@ export const sendMessage = async (bearerToken: string) => {
     throw error; // Re-throw the error to handle it elsewhere if needed
   }
 };
-
-export const publishChannel = async (bearerToken: string) => {
-    console.log("ive got balllsss:", bearerToken);
-    try {
-      const response = await axios.get(
-        `${API_ENDPOINT_BASE}/api/v1/messages/create-message`,
-        {
-          headers: {
-            Authorization: `Bearer ${bearerToken}`,
-          },
-        }
-      );
-      console.log("send this message", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching object:", error);
-      throw error; // Re-throw the error to handle it elsewhere if needed
-    }
-  };
