@@ -9,14 +9,18 @@ import axios from "axios";
 import Nav from "@/components/Nav";
 import Logout from "@/components/Logout";
 import { useSession } from "next-auth/react";
-import { getConnectionToken, getMessages, sendMessage } from "./api";
+import {
+  getConnectionToken,
+  getMessages,
+  sendMessage,
+} from "@/services/chatsApi";
 import Centrifuge from "centrifuge";
 import { Save } from "lucide-react";
-
+import { toast } from "@/components/ui/use-toast";
 
 export default function Splash() {
-  const { data: session, status } = useSession();
-  const accessToken = session?.accessToken;
+  const { data: session , status } = useSession();
+  const accessToken = session?.accessToken ;
 
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +33,15 @@ export default function Splash() {
           setToken(token);
           setLoading(false);
         } catch (e) {
-          console.error('Error fetching token:', e);
+          toast({
+variant: "destructive",
+
+            title: "You submitted the following values:",
+            description: `${e}`,
+            type: "foreground",
+            duration: 5000,
+          });
+          console.error("Error fetching token:", e);
           setLoading(false);
         }
       } else {
@@ -42,49 +54,54 @@ export default function Splash() {
 
   useEffect(() => {
     if (token && !loading) {
-      const CENTRIFUGO__ACCESS_TOKEN:any  = localStorage.getItem('CENTRIFUGO_ACCESS_TOKEN');
-      const CENTRIFUGO__WEBSOCKET:any = localStorage.getItem('CENTRIFUGO_WEBSOCKET');
-      
+      const CENTRIFUGO__ACCESS_TOKEN: any = localStorage.getItem(
+        "CENTRIFUGO_ACCESS_TOKEN"
+      );
+      const CENTRIFUGO__WEBSOCKET: any = localStorage.getItem(
+        "CENTRIFUGO_WEBSOCKET"
+      );
+
       const centrifuge = new Centrifuge(CENTRIFUGO__WEBSOCKET);
       centrifuge.setToken(CENTRIFUGO__ACCESS_TOKEN);
 
-      centrifuge.on('connect', (ctx) => {
-        console.log('connected', ctx);
-      });
-      
-      centrifuge.subscribe('save', (ctx) => {
-        console.log("This is the message received", ctx)
+      centrifuge.on("connect", (ctx) => {
+        console.log("connected", ctx);
       });
 
-      centrifuge.subscribe('downSitesMonitor', (ctx) => {
-        console.log('Down sites from centrifugo', ctx);
-        
+      centrifuge.subscribe("save", (ctx) => {
+        console.log("This is the message received", ctx);
+      });
+
+      centrifuge.subscribe("downSitesMonitor", (ctx) => {
+        console.log("Down sites from centrifugo", ctx);
+
         Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
+          if (permission === "granted") {
             setTimeout(() => {
-              const notification = new Notification(' Message Received', { body: `${ctx.data.availability}` });
-              notification.addEventListener('show', (event) => {
-                console.log('Notification shown', event);
+              const notification = new Notification(" Message Received", {
+                body: `${ctx.data.availability}`,
+              });
+              notification.addEventListener("show", (event) => {
+                console.log("Notification shown", event);
               });
               notification.addEventListener("close", function (event) {
-                console.log('Notification closed');
+                console.log("Notification closed");
               });
             }, 1000);
           }
         });
-        
       });
 
-      centrifuge.subscribe('notification', (ctx) => {
-        console.log('notification data from centrifugo server, dashboard', ctx);
+      centrifuge.subscribe("notification", (ctx) => {
+        console.log("notification data from centrifugo server, dashboard", ctx);
       });
 
-      centrifuge.subscribe('reminderChannel', (ctx) => {
-        console.log('reminderChannel data from centrifugo server', ctx);
+      centrifuge.subscribe("reminderChannel", (ctx) => {
+        console.log("reminderChannel data from centrifugo server", ctx);
       });
 
-      centrifuge.on('disconnect', (ctx) => {
-        console.log('disconnected', ctx);
+      centrifuge.on("disconnect", (ctx) => {
+        console.log("disconnected", ctx);
       });
 
       centrifuge.connect();
@@ -92,8 +109,6 @@ export default function Splash() {
   }, [token, loading]);
 
   async function log() {
-    
-
     let messageBox = document.getElementById(
       "messageBox"
     ) as HTMLTextAreaElement;
@@ -101,7 +116,7 @@ export default function Splash() {
     var message = message.trim();
     if (message != "") {
       console.log("Send message is: ", message);
-      
+
       var sending: payload = {
         id: "70311703-358f-45a1-a207-0a53f3422387",
         message: message,
@@ -111,7 +126,6 @@ export default function Splash() {
         sender: "Bryan",
         createdAt: "2024-07-16T12:59",
       };
-
 
       sendMessage(accessToken, message);
       message = " ";
@@ -137,6 +151,12 @@ export default function Splash() {
 
         setMessages(sortedMessages);
       } catch (error) {
+        toast({variant: "destructive",
+          title: "You submitted the following values:",
+          description: `${error}`,
+          type: "foreground",
+          duration: 5000,
+        });
         console.error("Error fetching messages:", error);
       }
     };

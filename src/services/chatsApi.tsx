@@ -1,6 +1,7 @@
 import axios, { AxiosHeaders } from "axios";
 import { API_ENDPOINT_BASE } from "@/utils/constants";
 import { useSession } from "next-auth/react";
+import { toast } from "@/components/ui/use-toast";
 
 export const getConnectionToken = async (bearerToken: string) => {
   console.log("the Bearer Token:", bearerToken);
@@ -16,6 +17,12 @@ export const getConnectionToken = async (bearerToken: string) => {
     localStorage.setItem("CENTRIFUGO_ACCESS_TOKEN", response.data.token);
     return response.data.token;
   } catch (e) {
+    toast({
+      title: "You submitted the following values:",
+      description: `${e}`,
+      type: "foreground",
+      duration: 5000,
+    });
     console.error("Error fetching object:", e);
     throw e; // Re-throw the error to handle it elsewhere if needed
   }
@@ -35,6 +42,13 @@ export const getMessages = async (bearerToken: string) => {
     console.log("got all messages", response.data);
     return response.data;
   } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "You submitted the following values:",
+      description: `${error}`,
+      type: "foreground",
+      duration: 5000,
+    });
     console.error("Error fetching object:", error);
     throw error; // Re-throw the error to handle it elsewhere if needed
   }
