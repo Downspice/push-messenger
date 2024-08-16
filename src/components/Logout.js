@@ -8,8 +8,11 @@ export default function Logout({ setSession }) {
   const { data: session, status } = useSession();
 
   return (
-    <div className="  flex justify-between bg-white border-b-grey  ">
+    <div className=" glass sticky top-0 flex justify-between  ">
       <div className="">{session?.user?.name}</div>
+      <div>
+        
+      </div>
       <div className=" ">
         <Button onClick={() => federatedLogout()}>Logout {userName}</Button>
       </div>

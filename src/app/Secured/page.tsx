@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { PaperPlaneIcon } from "@radix-ui/react-icons";
 import { Textarea } from "@/components/ui/textarea";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import Nav from "@/components/Nav";
 import Logout from "@/components/Logout";
@@ -17,13 +17,16 @@ import {
 import Centrifuge from "centrifuge";
 import { Save } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { setWSENDPOINT } from "@/utils/constants";
 
 export default function Splash() {
-  const { data: session , status } = useSession();
-  const accessToken = session?.accessToken ;
+  const { data: session, status } = useSession();
+  const accessToken = session?.accessToken;
 
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  setWSENDPOINT()
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -34,8 +37,7 @@ export default function Splash() {
           setLoading(false);
         } catch (e) {
           toast({
-variant: "destructive",
-
+            variant: "destructive",
             title: "You submitted the following values:",
             description: `${e}`,
             type: "foreground",
@@ -70,16 +72,11 @@ variant: "destructive",
 
       centrifuge.subscribe("save", (ctx) => {
         console.log("This is the message received", ctx);
-      });
-
-      centrifuge.subscribe("downSitesMonitor", (ctx) => {
-        console.log("Down sites from centrifugo", ctx);
-
         Notification.requestPermission().then((permission) => {
           if (permission === "granted") {
             setTimeout(() => {
               const notification = new Notification(" Message Received", {
-                body: `${ctx.data.availability}`,
+                body: `${ctx.data.message}`,
               });
               notification.addEventListener("show", (event) => {
                 console.log("Notification shown", event);
@@ -90,6 +87,12 @@ variant: "destructive",
             }, 1000);
           }
         });
+      });
+
+      centrifuge.subscribe("downSitesMonitor", (ctx) => {
+        console.log("Down sites from centrifugo", ctx);
+
+       
       });
 
       centrifuge.subscribe("notification", (ctx) => {
@@ -127,12 +130,19 @@ variant: "destructive",
         createdAt: "2024-07-16T12:59",
       };
 
-      sendMessage(accessToken, message);
-      message = " ";
+      await sendMessage(accessToken, message);
+      messageBox.value = "   ";
+      
     } else {
       console.log("message is empty");
     }
   }
+
+  const messageEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   //get messages
   const [messages, setMessages] = useState<Message[]>([]);
@@ -148,10 +158,12 @@ variant: "destructive",
         const sortedMessages = data.sort(
           (a: Message, b: Message) => a.id - b.id
         );
-
+        
         setMessages(sortedMessages);
+       scrollToBottom();
       } catch (error) {
-        toast({variant: "destructive",
+        toast({
+          variant: "destructive",
           title: "You submitted the following values:",
           description: `${error}`,
           type: "foreground",
@@ -161,7 +173,8 @@ variant: "destructive",
       }
     };
 
-    fetchMessages();
+    fetchMessages().then(()=>scrollToBottom())
+   
   }, [session?.accessToken]);
 
   //centrifugo connection
@@ -237,7 +250,7 @@ variant: "destructive",
         </div>
       </div>
       {/* Right side taking up remaining space */}
-      <div className="flex-1 h-dvh bg-gray-100 flex   flex-col">
+      <div className="flex-1 h-dvh bg-gray-100 flex flex-col">
         {/* <Nav/> */}
         <Logout setSession="{undefined}" />
         <div className="flex-1 overflow-y-auto content-end p-4">
@@ -284,15 +297,17 @@ variant: "destructive",
                 </div>
               )}
             </div>
-          ))}
+          ))
+          }
+          <div ref={messageEndRef} />
         </div>
         <div className="bg-white border-t p-4 flex items-center">
-          <Textarea
-            id="messageBox"
-            style={{ resize: "none" }}
-            placeholder="Type your message here."
-            className="flex-1 mr-2"
-          />
+        <Textarea
+          id="messageBox"
+          style={{ resize: "none", maxHeight: "200px", overflowY: "auto" }}
+          placeholder="Type your message here."
+          className="flex-1 mr-2"
+        />
           <Button onClick={log}>
             <PaperPlaneIcon className="mr-2 h-4 w-4" />
             Send

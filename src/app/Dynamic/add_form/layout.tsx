@@ -2,8 +2,8 @@ import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Header from "@/components/ui/header";
-import Providers from "../providers";
 import PrivateRoute from "@/helpers/PrivateRoute";
+import Providers from "@/app/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -19,11 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Header className="sticky top-0  " />
+        
         <Providers>
           <PrivateRoute>{children}</PrivateRoute>
         </Providers>
-
         <Toaster />
       </body>
     </html>
