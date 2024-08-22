@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
@@ -15,9 +16,11 @@ import {
   sendMessage,
 } from "@/services/chatsApi";
 import Centrifuge from "centrifuge";
-import { Save } from "lucide-react";
+import { ArrowDownCircle, Save } from "lucide-react";
+import { Container } from "react-floating-action-button";
 import { toast } from "@/components/ui/use-toast";
 import { setWSENDPOINT } from "@/utils/constants";
+import { getAllUsers } from "@/services/user";
 
 export default function Splash() {
   const { data: session, status } = useSession();
@@ -26,7 +29,7 @@ export default function Splash() {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  setWSENDPOINT()
+  setWSENDPOINT();
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -91,8 +94,6 @@ export default function Splash() {
 
       centrifuge.subscribe("downSitesMonitor", (ctx) => {
         console.log("Down sites from centrifugo", ctx);
-
-       
       });
 
       centrifuge.subscribe("notification", (ctx) => {
@@ -111,30 +112,22 @@ export default function Splash() {
     }
   }, [token, loading]);
 
-  async function log() {
-    let messageBox = document.getElementById(
+  async function log() { 
+    const messageBox = document.getElementById(
       "messageBox"
     ) as HTMLTextAreaElement;
-    var message = messageBox.value;
-    var message = message.trim();
+    const message = messageBox.value; 
+    
     if (message != "") {
       console.log("Send message is: ", message);
-
       var sending: payload = {
-        id: "70311703-358f-45a1-a207-0a53f3422387",
         message: message,
-        senderId: `${session?.user?.email}`,
-        receiverId: "7f38f730-3fc2-4a03-a0e5-ff464a004bf9",
-        receiver: "Prince",
-        sender: "Bryan",
-        createdAt: "2024-07-16T12:59",
-      };
-
-      await sendMessage(accessToken, message);
-      messageBox.value = "   ";
-      
+        sender: `${session?.user?.name}`,
+      }; 
+      await sendMessage(accessToken, sending);
+      messageBox.value = "";
     } else {
-      console.log("message is empty");
+      console.log(messageBox.value, "message is empty");
     }
   }
 
@@ -142,6 +135,7 @@ export default function Splash() {
 
   const scrollToBottom = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    console.log("scroll works");
   };
 
   //get messages
@@ -158,9 +152,9 @@ export default function Splash() {
         const sortedMessages = data.sort(
           (a: Message, b: Message) => a.id - b.id
         );
-        
+
         setMessages(sortedMessages);
-       scrollToBottom();
+        scrollToBottom();
       } catch (error) {
         toast({
           variant: "destructive",
@@ -173,24 +167,35 @@ export default function Splash() {
       }
     };
 
-    fetchMessages().then(()=>scrollToBottom())
-   
+    fetchMessages().then(() => scrollToBottom());
   }, [session?.accessToken]);
 
-  //centrifugo connection
+  const [friendList, setFriendList] = useState<friend[]>([]);
+  useEffect(() => {
+    const fetchfriends = async () => {
+      try {
+        const token = session?.accessToken;
+        const friends = await getAllUsers(token);
+        setFriendList(friends);
+      } catch (error) {
+        console.error("this is an error when generating friend list", error);
+      }
+    };
+    fetchfriends();
+  }, [session?.accessToken]);
 
-  // const { data: session, status } = useSession();
-  // if(status != "authenticated"){
-
-  //     console.log("status is ===", status);
-  //     redirect(`${HOME}`)
-  // }
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const searchFriend = friendList.filter(
+    (friend) =>
+      friend.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      friend.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex" suppressHydrationWarning={true}>
       {/* chats sidebar with fixed width */}
-      <div className="w-64 h-full  bg-gray-200 ">
-        <div className="w-64 fixed ">
+      <div className="w-64 h-full  bg-white   ">
+        <div className="w-64 fixed overflow-y-scroll">
           <div className="pt-3  flex items-center">
             <div className="py-3 grid col-span-1">
               <Image src="/profile.png" alt="logo" width={50} height={50} />
@@ -202,55 +207,65 @@ export default function Splash() {
           </div>
           <div className="px-2 pb-4">
             <Input
-              id="search"
               type="text"
-              placeholder="Search for other users on PUSH "
-            ></Input>
-
-            {/* <div className="pb-7 grid grid-cols-1 place-items-center ">
-              <div className="grid col-span-1">
-                <Image
-                  src="/empty-for-friends.png"
-                  alt="empty-for-friends"
-                  width={400}
-                  height={400}
-                />
-              </div>
-              <div>
-                <div>you have no friends?</div>
-                <div>Click below to add friends</div>
-                <Button>ADD PUSH BUDDY</Button>
-              </div>
-            </div> */}
+              id="messageBox"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for other users on PUSH"
+            />
           </div>
           <div className=" border-1 border-border">
             <div> Messages</div>
           </div>
-
           <div>
-            <div>
-              <div className="">
-                <div className="pt-3  flex items-center">
-                  <div className="grid col-span-1">
-                    <Image
-                      src="/profile.png"
-                      alt="profile"
-                      width="60"
-                      height="60"
-                    />
+            {searchQuery == "" ? (
+              <div>
+                {friendList.map((friend) => (
+                  <div key={friend.id}>
+                    <div className="flex items-center">
+                      <Image
+                        src="/profile.png"
+                        alt="profile"
+                        width="60"
+                        height="60"
+                      />
+                    </div>
+                    <div className="flex-1 pl-4">
+                      <div>
+                        {friend.lastName} {friend.firstName}
+                      </div>
+                      <div>Last sent message</div>
+                    </div>
                   </div>
-                  <div className="grid col-span-5">
-                    <div>Joe</div>
-                    <div>Last sent message</div>
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              <div>
+                {searchFriend.map((searchResult) => (
+                  <div key={searchResult.id}>
+                    <div className="flex items-center">
+                      <Image
+                        src="/profile.png"
+                        alt="profile"
+                        width="60"
+                        height="60"
+                      />
+                    </div>
+                    <div className="flex-1 pl-4">
+                      <div>
+                        {searchResult.lastName} {searchResult.firstName}
+                      </div>
+                      <div>Last sent message</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
       {/* Right side taking up remaining space */}
-      <div className="flex-1 h-dvh bg-gray-100 flex flex-col">
+      <div className="flex-1 h-dvh backImage flex flex-col">
         {/* <Nav/> */}
         <Logout setSession="{undefined}" />
         <div className="flex-1 overflow-y-auto content-end p-4">
@@ -259,12 +274,12 @@ export default function Splash() {
               key={message.id}
               className={`flex mb-4 ${
                 // id of the sender
-                message.senderId === "7f38f730-3fc2-4a03-a0e5-ff464a004bf9"
+                message.sender === `${session?.user?.name}`
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
-              {message.messageType === "receiver" && (
+              {message.sender !== `${session?.user?.name}` && (
                 <div className="flex-shrink-0 mr-2">
                   <Image
                     src={"/profile.png"}
@@ -278,14 +293,14 @@ export default function Splash() {
               <div
                 className={`max-w-[50%] p-4 rounded-lg ${
                   // id of the sender
-                  message.senderId === "7f38f730-3fc2-4a03-a0e5-ff464a004bf9"
+                  message.sender === `${session?.user?.name}`
                     ? "bg-primary text-white"
                     : "bg-gray-300 text-black"
                 }`}
               >
                 <div>{message.message}</div>
               </div>
-              {message.senderId === "7f38f730-3fc2-4a03-a0e5-ff464a004bf9" && (
+              {message.sender === `${session?.user?.name}` && (
                 <div className="flex-shrink-0 ml-2">
                   <Image
                     src={"/profile.png"}
@@ -297,29 +312,26 @@ export default function Splash() {
                 </div>
               )}
             </div>
-          ))
-          }
+          ))}
           <div ref={messageEndRef} />
+          <Container>
+            <ArrowDownCircle
+              className=" text-primary"
+              onClick={() => scrollToBottom()}
+            />
+          </Container>
         </div>
         <div className="bg-white border-t p-4 flex items-center">
-        <Textarea
-          id="messageBox"
-          style={{ resize: "none", maxHeight: "200px", overflowY: "auto" }}
-          placeholder="Type your message here."
-          className="flex-1 mr-2"
-        />
+          <Textarea
+            id="messageBox"
+            style={{ resize: "none", maxHeight: "200px", overflowY: "auto" }}
+            placeholder="Type your message here."
+            className="flex-1 mr-2"
+          />
           <Button onClick={log}>
             <PaperPlaneIcon className="mr-2 h-4 w-4" />
             Send
           </Button>
-          {/* <Button onClick={connectToCentrifugo}>
-            <PaperPlaneIcon className="mr-2 h-4 w-4" />
-            centrifuge......
-          </Button> */}
-          {/* <Button onClick={showMessages}>
-              <PaperPlaneIcon className="mr-2 h-4 w-4" />
-              centrifuge......
-            </Button> */}
         </div>
       </div>
     </div>

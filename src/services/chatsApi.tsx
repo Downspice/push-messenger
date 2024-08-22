@@ -31,16 +31,19 @@ export const getConnectionToken = async (bearerToken: string) => {
 export const getMessages = async (bearerToken: string) => {
   console.log("the Bearer Token..........:", bearerToken);
   try {
-    const response = await axios.get(
-      `${API_ENDPOINT_BASE}/api/v1/messages/findAll`,
-      {
-        headers: {
-          Authorization: `Bearer ${bearerToken}`,
-        },
-      }
-    );
-    console.log("got all messages", response.data);
-    return response.data;
+    if(bearerToken){
+      const response = await axios.get(
+        `${API_ENDPOINT_BASE}/api/v1/messages/findAll`,
+        {
+          headers: {
+            Authorization: `Bearer ${bearerToken}`,
+          },
+        }
+      );
+      console.log("got all messages", response.data);
+      return response.data;
+    }
+    
   } catch (error) {
     toast({
       variant: "destructive",
@@ -54,12 +57,12 @@ export const getMessages = async (bearerToken: string) => {
   }
 };
 
-export const sendMessage = async (bearerToken: string, message: any) => {
+export const sendMessage = async (bearerToken: string, message: payload) => {
   console.log("the Bearer Token..........:", bearerToken);
   try {
     const response = await axios.post(
       `${API_ENDPOINT_BASE}/api/v1/messages/create-message`,
-      { message },
+       message ,
       {
         headers: {
           Authorization: `Bearer ${bearerToken}`,
@@ -70,7 +73,8 @@ export const sendMessage = async (bearerToken: string, message: any) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching object:", error);
-    throw error; // Re-throw the error to handle it elsewhere if needed
+    console.log("this what i tried to send", message);
+    throw error; 
   }
 };
 

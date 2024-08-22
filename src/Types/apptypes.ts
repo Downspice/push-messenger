@@ -1,5 +1,5 @@
 
-interface session {
+interface Session {
   name?: string | null;
   email?: string | null;
   image?: string | null;
@@ -10,11 +10,11 @@ interface session {
 interface payload {
   id?: string | null;
   message: string | null;
-  senderId: string | null;
-  receiverId: string | null;
-  receiver: string | null;
+  senderId?: string | null;
+  receiverId?: string | null;
+  receiver?: string | null;
   sender: string | null;
-  createdAt: string | null;
+  createdAt?: string | null;
 }
 
 interface Message {
@@ -22,11 +22,11 @@ interface Message {
   message: string;
   messageType: "sender" | "receiver";
   profilePicture?: string;
-  timestamp?: number; // Assuming timestamp is in milliseconds since epoch
+  timestamp?: number; // Assuming timestamp is in milliseconds 
   senderId?: string;
   receiverId?: string;
   receiver?: null;
-  sender?: null;
+  sender?: string;
 }
 
 interface FormField {
@@ -93,3 +93,10 @@ type FormDetail = {
   constraints: Option[];
   key: string;
 };
+
+interface friend{
+  id: string;
+  firstName: string
+  lastName: string
+  username: string
+}

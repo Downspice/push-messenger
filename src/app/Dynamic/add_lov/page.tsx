@@ -171,6 +171,7 @@ export default function DataTableDemo() {
     };
     tableDetails();
   }, [accessToken]);
+  
   const data = tableDetails;
 
 

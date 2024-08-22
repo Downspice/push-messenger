@@ -1,7 +1,10 @@
 "use client";
 import FormComponent from "@/components/FormComponent";
 import { toast } from "@/components/ui/use-toast";
-import { getFormById, getForms } from "@/services/formBuildingApi";
+import {
+  getFormById,
+  getForms,
+} from "@/services/formBuildingApi";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -11,6 +14,11 @@ export default function ViewForm() {
 
   const [forms, setForms] = useState<Form[]>([]);
   const [formDetails, setFormDetails] = useState<any[]>([]);
+
+  const getFilledForms = async () => {
+    await getFormAnswers(accessToken);
+  };
+  getFilledForms();
 
   useEffect(() => {
     const fetchForms = async () => {
@@ -29,12 +37,11 @@ export default function ViewForm() {
     const response = await getFormById(accessToken, id);
     const data = await response.data;
     const formfields = await data.formDetails;
-
     if (formfields) {
-        return formfields;
+      return formfields;
     }
     return [];
-};
+  };
 
   const handleFormClick = async (id: any) => {
     const formfields = await printDetails(id);
@@ -66,7 +73,7 @@ export default function ViewForm() {
           </div>
         ))}
       </div>
-      <div id="formView">
+      <div id="formView " className=" flex place-content-center w-1/2">
         {formDetails.length > 0 ? (
           <FormComponent formDetails={formDetails} />
         ) : (

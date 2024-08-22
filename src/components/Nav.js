@@ -10,7 +10,7 @@ export default async function Nav() {
   return (
     <div
       className={
-        "w-full flex  sticky top-0 justify-end border-b-2 bg-gray-200/50  "
+        "w-full flex  sticky top-0 justify-end border-b-2 bg-gray-200/50"
       }
     >
       {!session && <Login />}

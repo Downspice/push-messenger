@@ -1,9 +1,13 @@
-import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 
-import Nav from "../components/Nav";
-import { usePathname } from "next/navigation";
-const inter = Inter({ subsets: ["latin"] });
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
 
 export const metadata = {
   title: "Push",
@@ -16,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html className={`${poppins.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

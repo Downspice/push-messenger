@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,13 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2, Edit2 } from "lucide-react";
 import { createForm } from "@/services/formsSetupApi";
+import { getAllLOVCategories } from "@/services/formBuildingApi";
 
 interface FormDetail {
   fieldLabel: string;
   fieldType: string;
   isRequired: boolean;
-  fieldOptions?: Option[];
+  fieldOptions?: string;
   constraints?: Option[];
   defaultValue?: string;
   placeholder?: string;
@@ -40,14 +41,40 @@ interface FormDetail {
 interface Form {
   name: string;
   version: string;
-  category:string;
-  department:string;
+  category: string;
+  department: string;
   formDetails: FormDetail[];
+}
+
+interface LovCategory {
+  id: string;
+  name: string;
+  isEnabled: string;
+  description: string;
 }
 
 export default function DynamicForm() {
   const { data: session } = useSession();
   const accessToken = session?.accessToken;
+
+  const [lovCategory, setlovCategories] = useState<LovCategory[]>([]);
+  useEffect(() => {
+    const lov = async () => {
+      if (session?.accessToken) {
+        const accessToken = session.accessToken;
+        localStorage.setItem("localbearer", accessToken);
+        const bearer = localStorage.getItem("localbearer");
+        const options = async (accessToken: any) => {
+          await getAllLOVCategories(accessToken);
+        };
+        const lovCategories: any = await options(bearer);
+
+        setlovCategories(lovCategories);
+        return lov;
+      }
+    };
+    lov();
+  });
 
   const [formDetails, setFormDetails] = useState<FormDetail[]>([]);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -68,7 +95,6 @@ export default function DynamicForm() {
   } = useForm<FormDetail>({
     defaultValues: {
       isRequired: true,
-      fieldOptions: [],
       constraints: [],
     },
   });
@@ -130,13 +156,16 @@ export default function DynamicForm() {
         onSubmit={handleSubmit(handleMainFormSubmit)}
         className="flex-1 w-1/2 space-y-2"
       >
-        <Input {...register("name", { required: true })} placeholder="Form Name" />
+        <Input
+          {...register("name", { required: true })}
+          placeholder="Form Name"
+        />
         {errors.name && (
           <span className="text-destructive">This field is required</span>
         )}
         <Input {...register("version")} placeholder="Form Version" />
-        <Input  placeholder="Category" />
-        <Input  placeholder="Department" />
+        <Input placeholder="Category" />
+        <Input placeholder="Department" />
 
         <Dialog>
           <DialogTrigger asChild>
@@ -178,58 +207,70 @@ export default function DynamicForm() {
                         />
                       </div>
                       {shouldShowOptions && (
-                    <div className="space-y-2">
-                      <Label htmlFor="fieldOptions">Enter your options</Label>
-                      <div className="border-1 space-y-2 border-solid border p-2 rounded-md">
-                        {fieldOptions.map((option, index) => {
-                          const key = Object.keys(option)[0];
-                          return (
-                            <div key={index} className="flex items-center space-x-2">
-                              <span>{`Option ${index + 1}`}</span>
-                              <Input
-                                value={option[key]}
-                                onChange={(e) => {
-                                  const updatedOptions = [...fieldOptions];
-                                  updatedOptions[index] = { [key]: e.target.value };
-                                  setValue("fieldOptions", updatedOptions, {
+                        <div className="space-y-2">
+                          <Label htmlFor="fieldOptions">
+                            Enter your options
+                          </Label>
+                          <div className="border-1 space-y-2 border-solid border p-2 rounded-md">
+                            {fieldOptions.map((option, index) => {
+                              const key = Object.keys(option)[0];
+                              return (
+                                <div
+                                  key={index}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <span>{`Option ${index + 1}`}</span>
+                                  <Input
+                                    value={option[key]}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...fieldOptions];
+                                      updatedOptions[index] = {
+                                        [key]: e.target.value,
+                                      };
+                                      setValue("fieldOptions", updatedOptions, {
+                                        shouldValidate: true,
+                                      });
+                                    }}
+                                  />
+                                  <Button
+                                    size="icon"
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={() => {
+                                      const updatedOptions =
+                                        fieldOptions.filter(
+                                          (_, i) => i !== index
+                                        );
+                                      setValue("fieldOptions", updatedOptions, {
+                                        shouldValidate: true,
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                            <Button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                const newIndex = fieldOptions.length + 1;
+                                const newOption = { [`option${newIndex}`]: "" };
+                                setValue(
+                                  "fieldOptions",
+                                  [...fieldOptions, newOption],
+                                  {
                                     shouldValidate: true,
-                                  });
-                                }}
-                              />
-                              <Button
-                                size="icon"
-                                type="button"
-                                variant="destructive"
-                                onClick={() => {
-                                  const updatedOptions = fieldOptions.filter(
-                                    (_, i) => i !== index
-                                  );
-                                  setValue("fieldOptions", updatedOptions, {
-                                    shouldValidate: true,
-                                  });
-                                }}
-                              >
-                                <Trash2 />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                        <Button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const newIndex = fieldOptions.length + 1;
-                            const newOption = { [`option${newIndex}`]: "" };
-                            setValue("fieldOptions", [...fieldOptions, newOption], {
-                              shouldValidate: true,
-                            });
-                          }}
-                        >
-                          Add Option
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                                  }
+                                );
+                              }}
+                            >
+                              Add Option
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                       <div>
                         <Label htmlFor="constraints">Constraints</Label>
                         <Controller
@@ -254,6 +295,38 @@ export default function DynamicForm() {
                           )}
                         />
                       </div>
+                    </>
+                  )}
+                  {!shouldShowPlaceholderDefaultValueConstraints && (
+                    <>
+                      <Label htmlFor="fieldOptions">Option Category</Label>
+                      <Controller
+                        name="fieldOptions"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value || ""}
+                            onValueChange={(newValue) =>
+                              setValue("fieldType", newValue, {
+                                shouldValidate: true,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Choose the field Option category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {lovCategory.map((lovCategories) => (
+                                <div key={lovCategories.id}>
+                                  <SelectItem value={lovCategories.id}>
+                                    {lovCategories.name}
+                                  </SelectItem>
+                                </div>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </>
                   )}
                 </div>
@@ -300,9 +373,6 @@ export default function DynamicForm() {
                     />
                   </div>
                 </div>
-                
-                  
-                
               </div>
 
               <div className="flex items-center h-9">
@@ -356,13 +426,30 @@ export default function DynamicForm() {
               className="flex items-center justify-between p-4 border rounded-md"
             >
               <div>
-                <p><strong>Label:</strong> {field.fieldLabel}</p>
-                <p><strong>Type:</strong> {field.fieldType}</p>
-                <p><strong>Required:</strong> {field.isRequired ? "Yes" : "No"}</p>
-                {field.placeholder && <p><strong>Placeholder:</strong> {field.placeholder}</p>}
-                {field.defaultValue && <p><strong>Default Value:</strong> {field.defaultValue}</p>}
+                <p>
+                  <strong>Label:</strong> {field.fieldLabel}
+                </p>
+                <p>
+                  <strong>Type:</strong> {field.fieldType}
+                </p>
+                <p>
+                  <strong>Required:</strong> {field.isRequired ? "Yes" : "No"}
+                </p>
+                {field.placeholder && (
+                  <p>
+                    <strong>Placeholder:</strong> {field.placeholder}
+                  </p>
+                )}
+                {field.defaultValue && (
+                  <p>
+                    <strong>Default Value:</strong> {field.defaultValue}
+                  </p>
+                )}
                 {field.constraints?.length > 0 && (
-                  <p><strong>Constraints:</strong> {field.constraints.map(c => c.label).join(", ")}</p>
+                  <p>
+                    <strong>Constraints:</strong>{" "}
+                    {field.constraints.map((c) => c.label).join(", ")}
+                  </p>
                 )}
               </div>
               <div className="flex space-x-2">
